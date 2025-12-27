@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -9,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="بوابة الطالب">
     
-    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"بوابة الطالب","short_name":"طالبي","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#6366f1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2995/2995620.png","sizes":"192x192","type":"image/png"}]}'>
+    <link rel="manifest" href="manifest.json">
 
     <title>بوابة الطالب الإلكترونية</title>
     
@@ -64,7 +65,7 @@
             align-items: center;
             z-index: 1000;
             padding: 20px;
-            background: inherit; /* لوراثة الخلفية المتحركة */
+            background: inherit;
         }
 
         .login-card {
@@ -145,12 +146,11 @@
             align-items: center;
             justify-content: center;
             font-size: 2.5rem;
-            margin: -50px auto 15px; /* يخرج نصفه للأعلى */
+            margin: -50px auto 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             border: 4px solid white;
         }
 
-        /* الإحصائيات */
         .stats-grid { display: flex; gap: 10px; margin-bottom: 20px; }
         .stat-box {
             flex: 1;
@@ -163,16 +163,16 @@
         .stat-value { font-size: 1.5rem; font-weight: 800; display: block; }
         .stat-label { font-size: 0.8rem; color: #64748b; }
 
-        /* --- نظام تبويبات الأشهر (الجديد) --- */
+        /* تبويبات الأشهر */
         .months-scroll-container {
             display: flex;
             gap: 10px;
             overflow-x: auto;
             padding-bottom: 10px;
             margin-bottom: 10px;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
-        .months-scroll-container::-webkit-scrollbar { display: none; } /* Chrome */
+        .months-scroll-container::-webkit-scrollbar { display: none; }
         
         .month-tab {
             background: white;
@@ -192,7 +192,6 @@
             box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
         }
 
-        /* الجدول */
         .grades-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .grades-table th { text-align: right; color: #64748b; padding: 10px; font-size: 0.9rem; }
         .grades-table td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold; }
@@ -212,7 +211,6 @@
             cursor: help;
         }
 
-        /* المرشد */
         .counselor-section {
             background: #fff1f2;
             border-right: 4px solid #f43f5e;
@@ -229,7 +227,6 @@
             font-size: 0.95rem;
         }
 
-        /* واتساب */
         .whatsapp-float {
             position: fixed;
             bottom: 20px;
@@ -250,9 +247,8 @@
         }
         .whatsapp-float:hover { transform: scale(1.1); }
 
-        /* تثبيت التطبيق */
         #install-btn {
-            display: none; /* يظهر بالجافا سكريبت */
+            display: none;
             background: #333;
             color: white;
             position: fixed;
@@ -270,7 +266,6 @@
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; display: none; }
         .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
     </style>
 </head>
 <body>
@@ -347,8 +342,7 @@
                 <i class="fas fa-chart-bar" style="color: var(--primary); margin-left: 5px;"></i> كشف الدرجات
             </h3>
             
-            <div class="months-scroll-container" id="monthsTabs">
-                </div>
+            <div class="months-scroll-container" id="monthsTabs"></div>
 
             <div id="gradesTableContainer">
                 <table class="grades-table">
@@ -359,8 +353,7 @@
                             <th style="text-align:left;">ملاحظات</th>
                         </tr>
                     </thead>
-                    <tbody id="gradesTableBody">
-                        </tbody>
+                    <tbody id="gradesTableBody"></tbody>
                 </table>
                 <p id="noGradesMsg" style="text-align:center; color:#94a3b8; padding:20px; display:none;">اختر شهراً لعرض الدرجات</p>
             </div>
@@ -374,7 +367,6 @@
         import { getFirestore, collection, getDocs } 
         from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-        // إعدادات Firebase (نفس إعدادات الأدمن)
         const firebaseConfig = {
             apiKey: "AIzaSyA_62YEw_4tGV5btFqb83R_2JxraAFTevw",
             authDomain: "mdrsa-c548d.firebaseapp.com",
@@ -388,13 +380,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // متغيرات عامة
         let tempStudentData = null;
         let tempClassData = null;
         let schoolSettings = null;
         let groupedGrades = {};
 
-        // 1. دالة التحقق من الرمز
         window.checkCode = async function() {
             const code = document.getElementById('passwordInput').value.trim();
             if(!code) return alert("الرجاء كتابة الرمز");
@@ -402,11 +392,9 @@
             document.getElementById('loading-overlay').style.display = 'flex';
 
             try {
-                // جلب الصفوف
                 const querySnapshot = await getDocs(collection(db, "classes"));
                 let found = false;
 
-                // البحث اليدوي في المصفوفات (لأن الهيكلية students array)
                 for (const doc of querySnapshot.docs) {
                     const classData = doc.data();
                     if(classData.students) {
@@ -420,26 +408,18 @@
                     }
                 }
                 
-                // جلب إعدادات المدرسة (للاسم والسنة)
                 if(found) {
-                    // نحتاج جلب الإعدادات مرة واحدة
                     if(!schoolSettings) {
-                        const settingsSnap = await getDocs(collection(db, "settings")); // أو قراءة الوثيقة المحددة
-                        // ملاحظة: الكود السابق كان يحفظ في doc(settings/schoolConfig)
-                        // لنسهل الأمر، سنجلب المجموعة ونأخذ أول وثيقة أو نبحث عن schoolConfig
-                        // الطريقة الأسرع للبحث في المجموعة:
+                        const settingsSnap = await getDocs(collection(db, "settings"));
                         settingsSnap.forEach(doc => {
                              if(doc.id === 'schoolConfig') schoolSettings = doc.data();
                         });
                     }
                     
                     document.getElementById('loading-overlay').style.display = 'none';
-                    // عرض شاشة التأكيد
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('confirm-screen').style.display = 'flex';
                     document.getElementById('confirmName').innerText = tempStudentData.name;
-                    
-                    // تحريك النص
                     gsap.from("#confirmName", {scale: 0.5, opacity: 0, duration: 0.4});
 
                 } else {
@@ -454,14 +434,12 @@
             }
         };
 
-        // 2. دالة تأكيد الدخول
         window.confirmLogin = function(isConfirmed) {
             if(isConfirmed) {
                 document.getElementById('confirm-screen').style.display = 'none';
                 document.getElementById('dashboard-screen').style.display = 'block';
                 renderDashboard();
             } else {
-                // إلغاء وعودة
                 tempStudentData = null;
                 document.getElementById('confirm-screen').style.display = 'none';
                 document.getElementById('login-screen').style.display = 'flex';
@@ -469,22 +447,18 @@
             }
         };
 
-        // 3. عرض البيانات في اللوحة
         function renderDashboard() {
-            // بيانات المدرسة
             if(schoolSettings) {
                 document.getElementById('schoolHeader').innerHTML = `<h1>${schoolSettings.schoolName}</h1><p>${schoolSettings.year}</p>`;
             } else {
                 document.getElementById('schoolHeader').innerHTML = `<h1>مدرستي</h1><p>2025</p>`;
             }
 
-            // بيانات الطالب
             document.getElementById('stName').innerText = tempStudentData.name;
             document.getElementById('stClass').innerText = `${tempClassData.name} - ${tempClassData.section}`;
             document.getElementById('stAbsence').innerText = tempStudentData.absences || 0;
             document.getElementById('stBehavior').innerText = tempStudentData.behavior || "جيد";
 
-            // المرشد التربوي
             const cList = document.getElementById('counselorList');
             const cSec = document.getElementById('counselorSection');
             cList.innerHTML = '';
@@ -500,7 +474,6 @@
                 cSec.style.display = 'none';
             }
 
-            // معالجة الدرجات (تجميع حسب الشهر)
             processGrades(tempStudentData.grades);
         }
 
@@ -516,25 +489,22 @@
                 return;
             }
 
-            // تجميع البيانات
             grades.forEach(g => {
                 const month = g.month || "عام";
                 if(!groupedGrades[month]) groupedGrades[month] = [];
                 groupedGrades[month].push(g);
             });
 
-            // إنشاء الأزرار (التبويبات)
             const months = Object.keys(groupedGrades);
             months.forEach((m, index) => {
                 const btn = document.createElement('div');
                 btn.className = 'month-tab';
-                if(index === 0) btn.classList.add('active'); // تفعيل الأول تلقائياً
+                if(index === 0) btn.classList.add('active');
                 btn.innerText = m;
                 btn.onclick = () => switchMonth(m, btn);
                 tabsContainer.appendChild(btn);
             });
 
-            // عرض أول شهر تلقائياً
             if(months.length > 0) {
                 renderTableForMonth(months[0]);
                 document.querySelector('.grades-table').style.display = 'table';
@@ -542,11 +512,8 @@
         }
 
         window.switchMonth = function(monthName, clickedBtn) {
-            // تحديث الستايل
             document.querySelectorAll('.month-tab').forEach(b => b.classList.remove('active'));
             clickedBtn.classList.add('active');
-            
-            // تحديث الجدول
             renderTableForMonth(monthName);
         }
 
@@ -556,7 +523,6 @@
             
             const monthGrades = groupedGrades[monthName] || [];
             
-            // تأثير اختفاء بسيط قبل الظهور
             gsap.fromTo(tbody, {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.3});
 
             monthGrades.forEach(g => {
