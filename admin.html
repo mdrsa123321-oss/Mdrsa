@@ -1,0 +1,727 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مدرستي برو - الإدارة (Online)</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root { --primary: #6366f1; --secondary: #ec4899; --glass: rgba(255, 255, 255, 0.95); --text: #1e293b; --radius: 16px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        body { background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .app-container { width: 100%; min-height: 100vh; padding: 20px; padding-top: 40px; display: none; }
+        #screen-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: inherit; z-index: 10000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 25px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .screen { display: none; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card-panel { background: var(--glass); padding: 20px; border-radius: var(--radius); margin-bottom: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 12px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1rem; background-color: #ffffff !important; color: #000000 !important; margin-bottom: 10px; font-weight: 700; }
+        input:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .btn:active { transform: scale(0.96); }
+        .btn-secondary { background: var(--secondary); }
+        .btn-green { background: #10b981; }
+        .btn-red { background: #e11d48; }
+        .btn-small { width: auto; padding: 8px 15px; font-size: 0.9rem; margin: 0; }
+        .classes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .class-card { background: white; padding: 20px; border-radius: var(--radius); text-align: center; position: relative; cursor: pointer; }
+        .class-icon { width: 50px; height: 50px; background: #e0e7ff; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 10px; }
+        .student-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-right: 5px solid var(--primary); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .grade-row-container { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        .grade-inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 15px; display: none; justify-content: space-around; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-item { font-size: 1.5rem; color: #94a3b8; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); transform: translateY(-5px); }
+        
+        /* تنسيقات الجدول الجديد */
+        .grades-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        .grades-table th { background: #e0e7ff; color: var(--primary); padding: 10px; border: 1px solid #cbd5e1; }
+        .grades-table td { padding: 8px; border: 1px solid #cbd5e1; text-align: center; background: white; color: #333; }
+        .grades-table tr:nth-child(even) td { background: #f8fafc; }
+        
+        /* تنسيق المرشد التربوي */
+        .counselor-box { background: #fff1f2; border: 1px solid #fda4af; padding: 10px; border-radius: 8px; margin-top: 5px; color: #be123c; font-size: 0.9rem; }
+
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; display: none; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .whatsapp-float { position: fixed; top: 20px; left: 20px; background-color: #25d366; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 9999; text-decoration: none; font-size: 1.3rem; }
+    </style>
+</head>
+<body>
+
+    <a href="https://wa.me/9647812534439" target="_blank" class="whatsapp-float"><i class="fab fa-whatsapp"></i></a>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>جاري الاتصال بقاعدة البيانات...</p>
+    </div>
+
+    <div id="screen-login">
+        <div class="login-box">
+            <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"><i class="fas fa-lock"></i></div>
+            <h2 style="color: #333; margin-bottom: 10px;">مرحباً بك</h2>
+            <p style="color:#666; margin-bottom: 25px;">أدخل البريد الإلكتروني للمتابعة</p>
+            <input type="email" id="loginEmailInput" placeholder="example@gmail.com" style="direction: ltr; text-align: left;">
+            <button class="btn" onclick="checkLogin()">دخول للنظام</button>
+        </div>
+    </div>
+
+    <div class="app-container" id="mainAppContainer">
+        <div id="screen-setup" class="screen">
+            <h2><i class="fas fa-database"></i> إعداد قاعدة البيانات</h2>
+            <p style="color:white; text-align:center; margin-bottom:10px; font-size:0.8rem;">سيتم إنشاء الجداول والحقول تلقائياً عند الحفظ</p>
+            <div class="card-panel">
+                <label>اسم المدرسة</label>
+                <input type="text" id="setupSchoolName" placeholder="اكتب اسم المدرسة">
+                <label>البريد الإلكتروني (Admin)</label>
+                <input type="email" id="setupEmail" placeholder="example@gmail.com" style="direction: ltr;">
+                <label>العام الدراسي</label>
+                <input type="text" id="setupYear" placeholder="2024 - 2025">
+            </div>
+            <button class="btn" onclick="saveSchoolSettings()">حفظ وإنشاء البيانات</button>
+        </div>
+
+        <div id="screen-main" class="screen">
+            <div id="schoolHeader" style="text-align:center; color:white; margin-bottom:20px;"></div>
+            <div class="card-panel">
+                <label>إضافة صف جديد</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="newClassInput" placeholder="اسم الصف (مثال: الأول)">
+                    <button class="btn btn-secondary" onclick="addNewClass()" style="width:60px;"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+            <div id="classesContainer" class="classes-grid"></div>
+        </div>
+
+        <div id="screen-search" class="screen">
+            <h2><i class="fas fa-search"></i> البحث عن طالب</h2>
+            <div class="card-panel"><input type="text" id="searchInput" placeholder="اكتب اسم الطالب..." onkeyup="searchStudents()"></div>
+            <div id="searchResults" style="padding-bottom:60px;"></div>
+        </div>
+
+        <div id="screen-preview" class="screen">
+            <button class="btn btn-small" style="background:rgba(255,255,255,0.3); margin-bottom:15px; width:100%;" onclick="showScreen('screen-search')"><i class="fas fa-arrow-right"></i> عودة</button>
+            <div class="card-panel" style="text-align:center;">
+                <h2 id="previewName" style="color:var(--text);"></h2>
+                <p id="previewClass" style="color:#64748b;"></p>
+            </div>
+            
+            <div class="card-panel">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <div class="preview-stat-box" style="flex:1; text-align:center; background:#f1f5f9; padding:10px; border-radius:10px;"><span>الغيابات</span><br><strong id="previewAbsence" style="color:var(--primary);">0</strong></div>
+                    <div class="preview-stat-box" style="flex:1; text-align:center; background:#f1f5f9; padding:10px; border-radius:10px;"><span>السلوك</span><br><strong id="previewBehavior" style="color:var(--secondary);">جيد</strong></div>
+                </div>
+
+                <h3 style="text-align:right; font-size:1.1rem; border-bottom:2px solid #eee; padding-bottom:5px;">سجل الدرجات</h3>
+                <div style="overflow-x:auto;">
+                    <table class="grades-table">
+                        <thead>
+                            <tr>
+                                <th>المادة</th>
+                                <th>الشهر</th>
+                                <th>الدرجة</th>
+                                <th>ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewGradesTableBody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 10px;">
+                    <h3 style="text-align:right; font-size:1.1rem; color:#e11d48;"><i class="fas fa-user-tie"></i> المرشد التربوي</h3>
+                    <div id="previewCounselorList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-details" class="screen">
+            <button class="btn btn-small" style="background:rgba(255,255,255,0.3); margin-bottom:15px; width:100%;" onclick="showScreen('screen-main')"><i class="fas fa-arrow-right"></i> رجوع</button>
+            <div class="card-panel">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1"><label>الصف</label><input type="text" id="detailClassName" readonly style="background:#e2e8f0 !important;"></div>
+                    <div style="flex:1"><label>الشعبة</label><input type="text" id="detailSectionName" placeholder="أ، ب..."></div>
+                </div>
+                <hr style="margin:15px 0;">
+                <label>اسم الطالب</label><input type="text" id="studentName" placeholder="الاسم الثلاثي">
+                <label>كلمة المرور</label><input type="text" id="studentPass" placeholder="تعيين كلمة سر">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1"><label>الغيابات</label><input type="number" id="studentAbsence" placeholder="0"></div>
+                    <div style="flex:1"><label>السلوك</label><input type="text" id="studentBehavior" placeholder="جيد"></div>
+                </div>
+
+                <div style="background: #e0e7ff; padding: 10px; border-radius: 12px; margin-top:10px;">
+                    <label>إضافة مادة</label>
+                    <div style="display:flex; gap:10px;"><input type="text" id="tempSubjectInput" placeholder="المادة"><button class="btn btn-small btn-secondary" onclick="addSubjectField()"><i class="fas fa-plus"></i></button></div>
+                </div>
+                <div id="dynamicGradesContainer" style="margin-top:15px;"></div>
+                
+                <div style="background: #ffe4e6; padding: 10px; border-radius: 12px; margin-top:15px; border:1px solid #fda4af;">
+                    <label style="color:#be123c;">المرشد التربوي</label>
+                    <div id="counselorContainer" style="margin-bottom:10px;"></div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="tempCounselorInput" placeholder="اكتب ملاحظة المرشد...">
+                        <button class="btn btn-small btn-red" onclick="addCounselorField()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="addNewStudent()" style="margin-top:15px;">حفظ الطالب</button>
+            </div>
+            <div id="studentsList" style="padding-bottom:60px;"></div>
+        </div>
+
+        <div id="screen-profile" class="screen">
+            <button class="btn btn-small" style="background:rgba(255,255,255,0.3); margin-bottom:15px; width:100%;" onclick="showScreen('screen-details')"><i class="fas fa-arrow-right"></i> رجوع</button>
+            <div class="card-panel" style="text-align:center;">
+                <h2 id="profileName" style="color:var(--text);"></h2>
+                <p id="profileClass" style="color:#64748b;"></p>
+            </div>
+            <div class="card-panel">
+                <label>تعديل كلمة المرور</label><input type="text" id="editStudentPass">
+                <div style="display:flex; gap:10px;">
+                    <div style="flex:1"><label>الغيابات</label><input type="number" id="editStudentAbsence"></div>
+                    <div style="flex:1"><label>السلوك</label><input type="text" id="editStudentBehavior"></div>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 10px; border-radius: 12px; margin: 15px 0;">
+                    <label>مادة جديدة:</label>
+                    <div style="display:flex; gap:10px;"><input type="text" id="profileSubjectInput" placeholder="المادة..."><button class="btn btn-small" onclick="addSubjectToProfile()"><i class="fas fa-plus"></i></button></div>
+                </div>
+                <div id="profileGradesContainer"></div>
+
+                <div style="background: #ffe4e6; padding: 10px; border-radius: 12px; margin: 15px 0; border:1px solid #fda4af;">
+                    <label style="color:#be123c;">سجل المرشد التربوي:</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="profileCounselorInput" placeholder="إضافة ملاحظة...">
+                        <button class="btn btn-small btn-red" onclick="addCounselorToProfile()"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div id="profileCounselorContainer" style="margin-top:10px;"></div>
+                </div>
+
+                <button class="btn btn-green" onclick="saveModifiedStudent()"><i class="fas fa-check-circle"></i> حفظ التعديلات</button>
+            </div>
+            <button class="btn" onclick="deleteStudent()" style="background:#ef4444; margin-top:10px;"><i class="fas fa-trash"></i> حذف السجل</button>
+            <div style="height:60px;"></div>
+        </div>
+    </div>
+
+    <div class="bottom-nav" id="mainNav">
+        <div class="nav-item active" onclick="navTo('screen-main')"><i class="fas fa-home"></i></div>
+        <div class="nav-item" onclick="navTo('screen-search')"><i class="fas fa-search"></i></div>
+        <div class="nav-item" onclick="resetApp()"><i class="fas fa-cog"></i></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, arrayUnion, arrayRemove } 
+        from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_62YEw_4tGV5btFqb83R_2JxraAFTevw",
+            authDomain: "mdrsa-c548d.firebaseapp.com",
+            projectId: "mdrsa-c548d",
+            storageBucket: "mdrsa-c548d.firebasestorage.app",
+            messagingSenderId: "114929996060",
+            appId: "1:114929996060:web:ce96d7e193932cfb1fead9",
+            measurementId: "G-4B6M8F1R6N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        window.appData = { settings: null, classes: [] };
+        window.currentClassId = null;
+        window.currentStudentIdx = null;
+
+        window.showLoading = () => document.getElementById('loading-overlay').style.display = 'flex';
+        window.hideLoading = () => document.getElementById('loading-overlay').style.display = 'none';
+
+        window.onload = async function() {
+            showLoading();
+            try {
+                const settingsRef = doc(db, "settings", "schoolConfig");
+                const settingsSnap = await getDoc(settingsRef);
+
+                if (settingsSnap.exists()) {
+                    window.appData.settings = settingsSnap.data();
+                    hideLoading();
+                    document.getElementById('screen-login').style.display = 'flex';
+                } else {
+                    hideLoading();
+                    document.getElementById('screen-login').style.display = 'none';
+                    document.getElementById('mainAppContainer').style.display = 'block';
+                    showScreen('screen-setup');
+                }
+            } catch (error) {
+                console.error("Firebase Error:", error);
+                alert("حدث خطأ في الاتصال بقاعدة البيانات. تأكد من الإنترنت.");
+                hideLoading();
+            }
+        };
+
+        window.checkLogin = function() {
+            const inputEmail = document.getElementById('loginEmailInput').value.trim();
+            const savedEmail = window.appData.settings.adminEmail;
+
+            if (inputEmail === savedEmail) {
+                const loginScreen = document.getElementById('screen-login');
+                gsap.to(loginScreen, {opacity: 0, duration: 0.5, onComplete: () => {
+                    loginScreen.style.display = 'none';
+                    document.getElementById('mainAppContainer').style.display = 'block';
+                    document.getElementById('mainNav').style.display = 'flex';
+                    initApp();
+                }});
+            } else {
+                alert('البريد الإلكتروني غير صحيح!');
+            }
+        };
+
+        async function initApp() {
+            showLoading();
+            updateHeader();
+            try {
+                window.appData.classes = [];
+                const querySnapshot = await getDocs(collection(db, "classes"));
+                querySnapshot.forEach((doc) => {
+                    window.appData.classes.push({ id: doc.id, ...doc.data() });
+                });
+                renderClasses();
+                showScreen('screen-main');
+            } catch (e) {
+                alert("خطأ في جلب البيانات: " + e.message);
+            }
+            hideLoading();
+        }
+
+        window.saveSchoolSettings = async function() {
+            const name = document.getElementById('setupSchoolName').value;
+            const year = document.getElementById('setupYear').value;
+            const email = document.getElementById('setupEmail').value.trim();
+            
+            if(!name || !email.includes('@')) return alert('البيانات غير صحيحة');
+            
+            showLoading();
+            try {
+                await setDoc(doc(db, "settings", "schoolConfig"), {
+                    schoolName: name,
+                    year: year,
+                    adminEmail: email
+                });
+                
+                window.appData.settings = { schoolName: name, year: year, adminEmail: email };
+                updateHeader();
+                document.getElementById('mainNav').style.display = 'flex';
+                showScreen('screen-main');
+            } catch (e) {
+                alert("خطأ في الحفظ: " + e.message);
+            }
+            hideLoading();
+        };
+
+        window.addNewClass = async function() {
+            const name = document.getElementById('newClassInput').value;
+            if(!name) return;
+            
+            showLoading();
+            try {
+                const newClassRef = doc(collection(db, "classes"));
+                const classData = { name: name, section: '', students: [] };
+                
+                await setDoc(newClassRef, classData);
+                
+                window.appData.classes.push({ id: newClassRef.id, ...classData });
+                renderClasses();
+                document.getElementById('newClassInput').value = '';
+            } catch (e) {
+                alert("فشل إضافة الصف");
+            }
+            hideLoading();
+        };
+
+        window.deleteClass = async function(idx) {
+            if(!confirm('حذف الصف نهائياً؟')) return;
+            
+            const cls = window.appData.classes[idx];
+            showLoading();
+            try {
+                await deleteDoc(doc(db, "classes", cls.id));
+                window.appData.classes.splice(idx, 1);
+                renderClasses();
+            } catch (e) {
+                alert("خطأ في الحذف");
+            }
+            hideLoading();
+        };
+
+        // دالة إضافة حقل المرشد في شاشة الإضافة
+        window.addCounselorField = function() {
+            const val = document.getElementById('tempCounselorInput').value;
+            if(!val) return;
+            
+            const div = document.createElement('div');
+            div.className = 'counselor-item';
+            div.innerHTML = `<div style="display:flex; justify-content:space-between; background:#fff1f2; padding:8px; margin-bottom:5px; border-radius:8px;"><span class="c-val">${val}</span> <i class="fas fa-times" style="color:#e11d48; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i></div>`;
+            document.getElementById('counselorContainer').appendChild(div);
+            document.getElementById('tempCounselorInput').value = '';
+        };
+
+        window.addNewStudent = async function() {
+            const name = document.getElementById('studentName').value; 
+            const pass = document.getElementById('studentPass').value;
+            const abs = document.getElementById('studentAbsence').value || 0; 
+            const beh = document.getElementById('studentBehavior').value || "جيد";
+            const section = document.getElementById('detailSectionName').value;
+            
+            if(!name || !pass) return alert('البيانات ناقصة');
+            if(isPasswordTaken(pass)) return alert('كلمة المرور مستخدمة');
+
+            // تجميع الدرجات
+            let grades = [];
+            const gradeDivs = document.getElementById('dynamicGradesContainer').children;
+            for(let div of gradeDivs) {
+                const sub = div.querySelector('.sub-name-inp').value;
+                const month = div.querySelector('.month-inp').value;
+                const val = div.querySelector('.grade-inp').value;
+                const note = div.querySelector('.note-inp').value;
+                if(sub) grades.push({ sub, month: month || "عام", val: val || "", note: note || "" });
+            }
+
+            // تجميع بيانات المرشد التربوي
+            let counselorNotes = [];
+            const cDivs = document.getElementById('counselorContainer').children;
+            for(let div of cDivs) {
+                const txt = div.querySelector('.c-val').innerText;
+                if(txt) counselorNotes.push(txt);
+            }
+
+            const newStudent = { 
+                id: Date.now(), 
+                name, password: pass, absences: abs, behavior: beh, grades, counselorNotes
+            };
+
+            const clsId = window.currentClassId;
+            const clsIdx = window.appData.classes.findIndex(c => c.id === clsId);
+            
+            showLoading();
+            try {
+                const clsRef = doc(db, "classes", clsId);
+                await updateDoc(clsRef, {
+                    section: section,
+                    students: arrayUnion(newStudent)
+                });
+
+                window.appData.classes[clsIdx].section = section;
+                window.appData.classes[clsIdx].students.push(newStudent);
+                openClassDetails(clsIdx);
+                // تصفير حقول المرشد
+                document.getElementById('counselorContainer').innerHTML = '';
+            } catch (e) {
+                alert("فشل الحفظ: " + e.message);
+            }
+            hideLoading();
+        };
+
+        // دالة إضافة حقل المرشد في شاشة التعديل (بروفايل)
+        window.addCounselorToProfile = function() {
+            const val = document.getElementById('profileCounselorInput').value;
+            if(val) {
+                createCounselorRowProfile(val);
+                document.getElementById('profileCounselorInput').value = '';
+            }
+        };
+
+        window.createCounselorRowProfile = function(txt) {
+            const container = document.getElementById('profileCounselorContainer');
+            const div = document.createElement('div');
+            div.innerHTML = `<div style="display:flex; justify-content:space-between; background:#fff1f2; padding:8px; margin-bottom:5px; border-radius:8px;"><input type="text" class="edit-c-val" value="${txt}" style="border:none; background:transparent; width:90%; color:#be123c;"> <i class="fas fa-trash" style="color:#e11d48; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i></div>`;
+            container.appendChild(div);
+        }
+
+        window.saveModifiedStudent = async function() {
+            const clsIdx = window.appData.classes.findIndex(c => c.id === window.currentClassId);
+            const oldStudentData = window.appData.classes[clsIdx].students[window.currentStudentIdx];
+            
+            const newPass = document.getElementById('editStudentPass').value;
+            if(isPasswordTaken(newPass, oldStudentData.id)) return alert('كلمة المرور مستخدمة');
+
+            const updatedStudent = {
+                ...oldStudentData,
+                password: newPass,
+                absences: document.getElementById('editStudentAbsence').value,
+                behavior: document.getElementById('editStudentBehavior').value,
+                grades: [],
+                counselorNotes: []
+            };
+
+            // تجميع الدرجات
+            document.getElementById('profileGradesContainer').querySelectorAll('.grade-row-container').forEach((row) => {
+                updatedStudent.grades.push({ 
+                    sub: row.querySelector('.edit-sub').value, 
+                    month: row.querySelector('.edit-month').value, 
+                    val: row.querySelector('.edit-val').value,
+                    note: row.querySelector('.edit-note').value
+                });
+            });
+
+            // تجميع المرشد
+            document.getElementById('profileCounselorContainer').querySelectorAll('.edit-c-val').forEach(input => {
+                if(input.value) updatedStudent.counselorNotes.push(input.value);
+            });
+
+            showLoading();
+            try {
+                const clsRef = doc(db, "classes", window.currentClassId);
+                const clsSnap = await getDoc(clsRef);
+                const clsData = clsSnap.data();
+                
+                const stdIndex = clsData.students.findIndex(s => s.id === oldStudentData.id);
+                if(stdIndex > -1) {
+                    clsData.students[stdIndex] = updatedStudent;
+                    await updateDoc(clsRef, { students: clsData.students });
+                    
+                    window.appData.classes[clsIdx].students[window.currentStudentIdx] = updatedStudent;
+                    alert('تم الحفظ بنجاح');
+                }
+            } catch (e) {
+                alert("فشل التعديل: " + e.message);
+            }
+            hideLoading();
+        };
+
+        window.deleteStudent = async function() {
+            if(!confirm('حذف السجل؟')) return;
+            
+            const clsIdx = window.appData.classes.findIndex(c => c.id === window.currentClassId);
+            const studentToDelete = window.appData.classes[clsIdx].students[window.currentStudentIdx];
+            
+            showLoading();
+            try {
+                const clsRef = doc(db, "classes", window.currentClassId);
+                await updateDoc(clsRef, {
+                    students: arrayRemove(studentToDelete)
+                });
+                
+                window.appData.classes[clsIdx].students.splice(window.currentStudentIdx, 1);
+                showScreen('screen-details');
+                renderStudentsList();
+            } catch(e) {
+                alert("فشل الحذف");
+            }
+            hideLoading();
+        };
+
+        window.resetApp = async function() { 
+            if(confirm('تحذير: سيتم حذف قاعدة البيانات بالكامل!\nهل أنت متأكد؟')) { 
+                const code = prompt("أدخل رمز الحماية (1001):");
+                if(code === "1001") {
+                    showLoading();
+                    try {
+                        await deleteDoc(doc(db, "settings", "schoolConfig"));
+                        const clsSnap = await getDocs(collection(db, "classes"));
+                        const deletePromises = [];
+                        clsSnap.forEach((d) => { deletePromises.push(deleteDoc(d.ref)); });
+                        await Promise.all(deletePromises);
+                        
+                        alert("تم فرمتة النظام.");
+                        location.reload();
+                    } catch(e) {
+                        alert("خطأ أثناء الفرمتة");
+                    }
+                }
+            } 
+        };
+
+        window.renderClasses = function() {
+            const c = document.getElementById('classesContainer'); c.innerHTML = '';
+            window.appData.classes.forEach((cls, idx) => {
+                const div = document.createElement('div'); div.className = 'class-card';
+                div.onclick = (e) => { if(!e.target.closest('.del')) openClassDetails(idx); };
+                div.innerHTML = `<button class="del" onclick="deleteClass(${idx})" style="position:absolute; top:5px; left:5px; border:none; background:none; color:red;"><i class="fas fa-trash"></i></button><div class="class-icon"><i class="fas fa-users"></i></div><h3>${cls.name}</h3><small>${cls.students.length} طالب</small>`;
+                c.appendChild(div);
+            });
+        };
+
+        window.openClassDetails = function(idx) {
+            const cls = window.appData.classes[idx];
+            window.currentClassId = cls.id;
+            
+            document.getElementById('detailClassName').value = cls.name; 
+            document.getElementById('detailSectionName').value = cls.section || '';
+            document.getElementById('studentName').value = ''; 
+            document.getElementById('studentPass').value = '';
+            document.getElementById('studentAbsence').value = ''; 
+            document.getElementById('studentBehavior').value = '';
+            document.getElementById('dynamicGradesContainer').innerHTML = '';
+            document.getElementById('counselorContainer').innerHTML = ''; // تصفير المرشد
+            renderStudentsList(); showScreen('screen-details');
+        };
+
+        window.renderStudentsList = function() {
+            const list = document.getElementById('studentsList'); list.innerHTML = '';
+            const cls = window.appData.classes.find(c => c.id === window.currentClassId);
+            if(!cls) return;
+            
+            [...cls.students].reverse().forEach((std, revIdx) => {
+                const realIdx = cls.students.indexOf(std); 
+                const div = document.createElement('div'); 
+                div.className = 'student-item';
+                div.onclick = () => openStudentProfile(realIdx);
+                div.innerHTML = `<div><div style="font-weight:bold;">${std.name}</div><small style="color:#64748b;">كلمة السر: ${std.password}</small></div><i class="fas fa-chevron-left" style="color:#cbd5e1;"></i>`;
+                list.appendChild(div);
+            });
+        };
+
+        window.openStudentProfile = function(stdIdx) {
+            window.currentStudentIdx = stdIdx;
+            const cls = window.appData.classes.find(c => c.id === window.currentClassId);
+            const std = cls.students[stdIdx];
+            
+            document.getElementById('profileName').innerText = std.name; 
+            document.getElementById('profileClass').innerText = `${cls.name} - ${cls.section}`;
+            document.getElementById('editStudentPass').value = std.password; 
+            document.getElementById('editStudentAbsence').value = std.absences || 0; 
+            document.getElementById('editStudentBehavior').value = std.behavior || "";
+            document.getElementById('profileSubjectInput').value = '';
+            document.getElementById('profileCounselorInput').value = '';
+            
+            // تعبئة الدرجات
+            const container = document.getElementById('profileGradesContainer'); container.innerHTML = '';
+            std.grades.forEach((g) => { addGradeRowToProfile(g.sub, g.month, g.val, g.note); });
+
+            // تعبئة المرشد
+            const cContainer = document.getElementById('profileCounselorContainer'); cContainer.innerHTML = '';
+            if(std.counselorNotes && std.counselorNotes.length > 0) {
+                std.counselorNotes.forEach(txt => createCounselorRowProfile(txt));
+            }
+
+            showScreen('screen-profile');
+        };
+
+        window.addSubjectField = function() {
+            const subName = document.getElementById('tempSubjectInput').value;
+            if(!subName) return alert('اكتب اسم المادة أولاً');
+            const div = document.createElement('div');
+            div.className = 'grade-row-container';
+            div.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><input type="text" class="sub-name-inp" value="${subName}" style="border:none; background:transparent !important; font-weight:bold; color:var(--primary); padding:0; width:auto; margin:0;"><i class="fas fa-times" style="color:red; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i></div><div class="grade-inputs-grid"><input type="text" class="month-inp" placeholder="الشهر"><input type="number" class="grade-inp" placeholder="الدرجة"></div><input type="text" class="note-inp" placeholder="ملاحظات..." style="margin-top:5px; border-style:dashed;">`;
+            document.getElementById('dynamicGradesContainer').appendChild(div);
+            document.getElementById('tempSubjectInput').value = '';
+        };
+
+        window.addSubjectToProfile = function() { 
+            const sub = document.getElementById('profileSubjectInput').value;
+            if(sub) { addGradeRowToProfile(sub, "", "", ""); document.getElementById('profileSubjectInput').value = ''; }
+        };
+
+        window.addGradeRowToProfile = function(sub, month, val, note) {
+            const container = document.getElementById('profileGradesContainer'); 
+            const row = document.createElement('div'); 
+            row.className = 'grade-row-container';
+            row.innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:5px;"><input type="text" class="edit-sub" value="${sub}" style="font-weight:bold; border:none; background:transparent!important; color:var(--primary); padding:0; width:auto;"><i class="fas fa-trash" style="color:#ef4444; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i></div><div class="grade-inputs-grid"><input type="text" class="edit-month" value="${month}" placeholder="الشهر"><input type="number" class="edit-val" value="${val}" placeholder="الدرجة"></div><input type="text" class="edit-note" value="${note || ''}" placeholder="ملاحظات..." style="margin-top:5px; border-style:dashed;">`;
+            container.appendChild(row);
+        };
+
+        window.searchStudents = function() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            if(query.length < 2) return;
+
+            window.appData.classes.forEach((cls) => {
+                cls.students.forEach((std) => {
+                    if(std.name.toLowerCase().includes(query)) {
+                        const div = document.createElement('div');
+                        div.className = 'student-item';
+                        div.innerHTML = `<div><div style="font-weight:bold;">${std.name}</div><small style="color:#64748b;">${cls.name} - ${cls.section}</small></div><i class="fas fa-eye" style="color:var(--primary);"></i>`;
+                        div.onclick = () => {
+                            document.getElementById('previewName').innerText = std.name;
+                            document.getElementById('previewClass').innerText = `${cls.name} - ${cls.section}`;
+                            document.getElementById('previewAbsence').innerText = std.absences || 0;
+                            document.getElementById('previewBehavior').innerText = std.behavior || "لا يوجد";
+                            
+                            // تعبئة الجدول
+                            const tableBody = document.getElementById('previewGradesTableBody');
+                            tableBody.innerHTML = '';
+                            
+                            if(std.grades.length === 0) {
+                                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">لا توجد درجات مسجلة</td></tr>';
+                            } else {
+                                std.grades.forEach(g => {
+                                    const tr = document.createElement('tr');
+                                    tr.innerHTML = `
+                                        <td><strong>${g.sub}</strong></td>
+                                        <td>${g.month || '-'}</td>
+                                        <td style="font-weight:bold; color:var(--primary);">${g.val || '-'}</td>
+                                        <td style="font-size:0.8rem; color:#666;">${g.note || '-'}</td>
+                                    `;
+                                    tableBody.appendChild(tr);
+                                });
+                            }
+
+                            // تعبئة المرشد التربوي
+                            const counselorDiv = document.getElementById('previewCounselorList');
+                            counselorDiv.innerHTML = '';
+                            if(std.counselorNotes && std.counselorNotes.length > 0) {
+                                std.counselorNotes.forEach(note => {
+                                    const cItem = document.createElement('div');
+                                    cItem.className = 'counselor-box';
+                                    cItem.innerText = note;
+                                    counselorDiv.appendChild(cItem);
+                                });
+                            } else {
+                                counselorDiv.innerHTML = '<p style="text-align:center; color:#ccc; font-size:0.8rem;">لا توجد ملاحظات من المرشد.</p>';
+                            }
+
+                            showScreen('screen-preview');
+                        };
+                        resultsDiv.appendChild(div);
+                    }
+                });
+            });
+        };
+
+        window.isPasswordTaken = function(password, excludeStudentId = null) {
+            for(let c of window.appData.classes) {
+                for(let s of c.students) {
+                    if(s.password === password) {
+                        if(excludeStudentId && s.id === excludeStudentId) continue;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        window.navTo = function(screenId) {
+            if(!window.appData.settings) return;
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(screenId === 'screen-main') document.querySelectorAll('.nav-item')[0].classList.add('active');
+            if(screenId === 'screen-search') document.querySelectorAll('.nav-item')[1].classList.add('active');
+            showScreen(screenId);
+        }
+
+        window.showScreen = function(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
+        }
+        
+        window.updateHeader = function() { 
+            if(!window.appData.settings) return;
+            const emailPart = `<div style="font-size:0.8rem; opacity:0.8; margin-top:5px; background:rgba(0,0,0,0.1); display:inline-block; padding:2px 10px; border-radius:10px;">${window.appData.settings.adminEmail}</div>`;
+            document.getElementById('schoolHeader').innerHTML = `<h1 style="margin:0; font-size:1.4rem;">${window.appData.settings.schoolName}</h1><p>${window.appData.settings.year}</p>${emailPart}`; 
+        }
+
+    </script>
+</body>
+</html>
