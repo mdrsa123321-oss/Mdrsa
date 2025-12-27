@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="theme-color" content="#6366f1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="بوابة الطالب">
+    
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,{"name":"بوابة الطالب","short_name":"طالبي","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#6366f1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/2995/2995620.png","sizes":"192x192","type":"image/png"}]}'>
+
+    <title>بوابة الطالب الإلكترونية</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --glass: rgba(255, 255, 255, 0.95);
+            --text: #1e293b;
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        body {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* شاشة الدخول */
+        #login-screen, #confirm-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            background: inherit; /* لوراثة الخلفية المتحركة */
+        }
+
+        .login-card {
+            background: var(--glass);
+            padding: 40px 30px;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        /* الشاشة الرئيسية */
+        #dashboard-screen {
+            display: none;
+            padding: 20px;
+            padding-top: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card-panel {
+            background: var(--glass);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .header-info {
+            text-align: center;
+            color: white;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-green { background: #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn-red { background: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+
+        /* تفاصيل الطالب */
+        .profile-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: -50px auto 15px; /* يخرج نصفه للأعلى */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 4px solid white;
+        }
+
+        /* الإحصائيات */
+        .stats-grid { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-box {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 800; display: block; }
+        .stat-label { font-size: 0.8rem; color: #64748b; }
+
+        /* --- نظام تبويبات الأشهر (الجديد) --- */
+        .months-scroll-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .months-scroll-container::-webkit-scrollbar { display: none; } /* Chrome */
+        
+        .month-tab {
+            background: white;
+            color: #64748b;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: 0.3s;
+        }
+        .month-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        /* الجدول */
+        .grades-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .grades-table th { text-align: right; color: #64748b; padding: 10px; font-size: 0.9rem; }
+        .grades-table td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-weight: bold; }
+        .grades-table tr:last-child td { border-bottom: none; }
+        
+        .grade-badge {
+            background: #f0f9ff;
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .note-tooltip {
+            color: #f59e0b;
+            font-size: 1.2rem;
+            cursor: help;
+        }
+
+        /* المرشد */
+        .counselor-section {
+            background: #fff1f2;
+            border-right: 4px solid #f43f5e;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .counselor-note {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            color: #881337;
+            font-size: 0.95rem;
+        }
+
+        /* واتساب */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #25d366;
+            color: white;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(37, 211, 102, 0.4);
+            z-index: 9999;
+            text-decoration: none;
+            font-size: 2rem;
+            transition: transform 0.3s;
+        }
+        .whatsapp-float:hover { transform: scale(1.1); }
+
+        /* تثبيت التطبيق */
+        #install-btn {
+            display: none; /* يظهر بالجافا سكريبت */
+            background: #333;
+            color: white;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 9998;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 20000; display: flex; justify-content: center; align-items: center; color: white; flex-direction: column; display: none; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <a href="https://wa.me/9647812534439" target="_blank" class="whatsapp-float">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <button id="install-btn" onclick="installPWA()"><i class="fas fa-download"></i> تثبيت التطبيق</button>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>جاري جلب البيانات...</p>
+    </div>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <div style="font-size: 3.5rem; color: var(--primary); margin-bottom: 10px;">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <h2 style="color: #333; margin-bottom: 5px;">بوابة الطالب</h2>
+            <p style="color: #64748b; margin-bottom: 25px;">أدخل رمزك الشخصي لعرض النتيجة</p>
+            
+            <input type="tel" id="passwordInput" placeholder="12345">
+            <button class="btn" onclick="checkCode()">دخول</button>
+        </div>
+    </div>
+
+    <div id="confirm-screen" style="display: none;">
+        <div class="login-card">
+            <h3 style="color:#64748b; margin-bottom:10px;">هل أنت الطالب:</h3>
+            <h2 id="confirmName" style="color:var(--primary); margin-bottom:20px; font-size:1.5rem;">...</h2>
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-green" onclick="confirmLogin(true)">نعم، أنا هو</button>
+                <button class="btn btn-red" onclick="confirmLogin(false)">لا، خروج</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-screen">
+        
+        <div class="header-info" id="schoolHeader">
+            <h1>...</h1>
+            <p>...</p>
+        </div>
+
+        <div class="card-panel" style="margin-top: 40px; text-align: center; position: relative;">
+            <div class="profile-icon"><i class="fas fa-user"></i></div>
+            <h2 id="stName" style="color: var(--text); margin-bottom: 5px;">...</h2>
+            <p id="stClass" style="color: #64748b; font-weight: bold;">...</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-value" id="stAbsence" style="color: var(--primary);">0</span>
+                <span class="stat-label">أيام الغياب</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-value" id="stBehavior" style="color: var(--secondary);">...</span>
+                <span class="stat-label">السلوك</span>
+            </div>
+        </div>
+
+        <div id="counselorSection" style="display:none;">
+            <div class="counselor-section">
+                <h3 style="margin-bottom:10px; color:#be123c; font-size:1rem;"><i class="fas fa-user-tie"></i> ملاحظات المرشد التربوي</h3>
+                <div id="counselorList"></div>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <h3 style="text-align: right; margin-bottom: 15px; color: var(--text); border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <i class="fas fa-chart-bar" style="color: var(--primary); margin-left: 5px;"></i> كشف الدرجات
+            </h3>
+            
+            <div class="months-scroll-container" id="monthsTabs">
+                </div>
+
+            <div id="gradesTableContainer">
+                <table class="grades-table">
+                    <thead>
+                        <tr>
+                            <th>المادة</th>
+                            <th style="text-align:center;">الدرجة</th>
+                            <th style="text-align:left;">ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradesTableBody">
+                        </tbody>
+                </table>
+                <p id="noGradesMsg" style="text-align:center; color:#94a3b8; padding:20px; display:none;">اختر شهراً لعرض الدرجات</p>
+            </div>
+        </div>
+
+        <button class="btn btn-red" onclick="location.reload()" style="margin-top:20px;"><i class="fas fa-sign-out-alt"></i> خروج آمن</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } 
+        from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        // إعدادات Firebase (نفس إعدادات الأدمن)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_62YEw_4tGV5btFqb83R_2JxraAFTevw",
+            authDomain: "mdrsa-c548d.firebaseapp.com",
+            projectId: "mdrsa-c548d",
+            storageBucket: "mdrsa-c548d.firebasestorage.app",
+            messagingSenderId: "114929996060",
+            appId: "1:114929996060:web:ce96d7e193932cfb1fead9",
+            measurementId: "G-4B6M8F1R6N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // متغيرات عامة
+        let tempStudentData = null;
+        let tempClassData = null;
+        let schoolSettings = null;
+        let groupedGrades = {};
+
+        // 1. دالة التحقق من الرمز
+        window.checkCode = async function() {
+            const code = document.getElementById('passwordInput').value.trim();
+            if(!code) return alert("الرجاء كتابة الرمز");
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            try {
+                // جلب الصفوف
+                const querySnapshot = await getDocs(collection(db, "classes"));
+                let found = false;
+
+                // البحث اليدوي في المصفوفات (لأن الهيكلية students array)
+                for (const doc of querySnapshot.docs) {
+                    const classData = doc.data();
+                    if(classData.students) {
+                        const student = classData.students.find(s => s.password === code);
+                        if(student) {
+                            tempStudentData = student;
+                            tempClassData = { name: classData.name, section: classData.section };
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // جلب إعدادات المدرسة (للاسم والسنة)
+                if(found) {
+                    // نحتاج جلب الإعدادات مرة واحدة
+                    if(!schoolSettings) {
+                        const settingsSnap = await getDocs(collection(db, "settings")); // أو قراءة الوثيقة المحددة
+                        // ملاحظة: الكود السابق كان يحفظ في doc(settings/schoolConfig)
+                        // لنسهل الأمر، سنجلب المجموعة ونأخذ أول وثيقة أو نبحث عن schoolConfig
+                        // الطريقة الأسرع للبحث في المجموعة:
+                        settingsSnap.forEach(doc => {
+                             if(doc.id === 'schoolConfig') schoolSettings = doc.data();
+                        });
+                    }
+                    
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    // عرض شاشة التأكيد
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('confirm-screen').style.display = 'flex';
+                    document.getElementById('confirmName').innerText = tempStudentData.name;
+                    
+                    // تحريك النص
+                    gsap.from("#confirmName", {scale: 0.5, opacity: 0, duration: 0.4});
+
+                } else {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    alert("الرمز غير صحيح! تأكد من الرقم وحاول مجدداً.");
+                }
+
+            } catch (error) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                console.error(error);
+                alert("حدث خطأ في الاتصال. تأكد من الإنترنت.");
+            }
+        };
+
+        // 2. دالة تأكيد الدخول
+        window.confirmLogin = function(isConfirmed) {
+            if(isConfirmed) {
+                document.getElementById('confirm-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                renderDashboard();
+            } else {
+                // إلغاء وعودة
+                tempStudentData = null;
+                document.getElementById('confirm-screen').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('passwordInput').value = '';
+            }
+        };
+
+        // 3. عرض البيانات في اللوحة
+        function renderDashboard() {
+            // بيانات المدرسة
+            if(schoolSettings) {
+                document.getElementById('schoolHeader').innerHTML = `<h1>${schoolSettings.schoolName}</h1><p>${schoolSettings.year}</p>`;
+            } else {
+                document.getElementById('schoolHeader').innerHTML = `<h1>مدرستي</h1><p>2025</p>`;
+            }
+
+            // بيانات الطالب
+            document.getElementById('stName').innerText = tempStudentData.name;
+            document.getElementById('stClass').innerText = `${tempClassData.name} - ${tempClassData.section}`;
+            document.getElementById('stAbsence').innerText = tempStudentData.absences || 0;
+            document.getElementById('stBehavior').innerText = tempStudentData.behavior || "جيد";
+
+            // المرشد التربوي
+            const cList = document.getElementById('counselorList');
+            const cSec = document.getElementById('counselorSection');
+            cList.innerHTML = '';
+            if(tempStudentData.counselorNotes && tempStudentData.counselorNotes.length > 0) {
+                cSec.style.display = 'block';
+                tempStudentData.counselorNotes.forEach(note => {
+                    const div = document.createElement('div');
+                    div.className = 'counselor-note';
+                    div.innerHTML = `<i class="fas fa-quote-right"></i> <span>${note}</span>`;
+                    cList.appendChild(div);
+                });
+            } else {
+                cSec.style.display = 'none';
+            }
+
+            // معالجة الدرجات (تجميع حسب الشهر)
+            processGrades(tempStudentData.grades);
+        }
+
+        function processGrades(grades) {
+            groupedGrades = {};
+            const tabsContainer = document.getElementById('monthsTabs');
+            tabsContainer.innerHTML = '';
+
+            if(!grades || grades.length === 0) {
+                document.getElementById('noGradesMsg').style.display = 'block';
+                document.getElementById('noGradesMsg').innerText = "لا توجد درجات مسجلة.";
+                document.querySelector('.grades-table').style.display = 'none';
+                return;
+            }
+
+            // تجميع البيانات
+            grades.forEach(g => {
+                const month = g.month || "عام";
+                if(!groupedGrades[month]) groupedGrades[month] = [];
+                groupedGrades[month].push(g);
+            });
+
+            // إنشاء الأزرار (التبويبات)
+            const months = Object.keys(groupedGrades);
+            months.forEach((m, index) => {
+                const btn = document.createElement('div');
+                btn.className = 'month-tab';
+                if(index === 0) btn.classList.add('active'); // تفعيل الأول تلقائياً
+                btn.innerText = m;
+                btn.onclick = () => switchMonth(m, btn);
+                tabsContainer.appendChild(btn);
+            });
+
+            // عرض أول شهر تلقائياً
+            if(months.length > 0) {
+                renderTableForMonth(months[0]);
+                document.querySelector('.grades-table').style.display = 'table';
+            }
+        }
+
+        window.switchMonth = function(monthName, clickedBtn) {
+            // تحديث الستايل
+            document.querySelectorAll('.month-tab').forEach(b => b.classList.remove('active'));
+            clickedBtn.classList.add('active');
+            
+            // تحديث الجدول
+            renderTableForMonth(monthName);
+        }
+
+        function renderTableForMonth(monthName) {
+            const tbody = document.getElementById('gradesTableBody');
+            tbody.innerHTML = '';
+            
+            const monthGrades = groupedGrades[monthName] || [];
+            
+            // تأثير اختفاء بسيط قبل الظهور
+            gsap.fromTo(tbody, {opacity: 0, y: 10}, {opacity: 1, y: 0, duration: 0.3});
+
+            monthGrades.forEach(g => {
+                const tr = document.createElement('tr');
+                const noteIcon = g.note ? `<i class="fas fa-info-circle note-tooltip" title="${g.note}" onclick="alert('${g.note}')"></i>` : '';
+                
+                tr.innerHTML = `
+                    <td>${g.sub}</td>
+                    <td style="text-align:center;"><span class="grade-badge">${g.val}</span></td>
+                    <td style="text-align:left;">${noteIcon} <span style="font-size:0.8rem; color:#64748b;">${g.note || ''}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        }
+    </script>
+</body>
+</html>
